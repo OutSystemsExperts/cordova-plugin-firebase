@@ -7,8 +7,10 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 	<license>MIT</license>
 
 	<engines>
-		<engine name="cordova" version=">=3.2.0" />
+		<engine name="cordova" version=">=7.1.0" />
 	</engines>
+
+	<hook type="after_plugin_install" src="scripts/after_prepare.js" />
 
 	<platform name="android">
 		<hook type="after_plugin_install" src="scripts/android/after_plugin_install.js" />
@@ -117,5 +119,5 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 		</js-module>
 	</platform>
 
-	<hook type="after_prepare" src="scripts/after_prepare.js" />
+	
 </plugin>
