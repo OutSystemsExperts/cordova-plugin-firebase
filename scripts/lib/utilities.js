@@ -41,21 +41,20 @@ module.exports = {
       var file = platform.src[i];
       if (this.fileExists(file)) {
         try {
-          var contents = fs.readFileSync(file).toString();
+          var sourceFilePath = path.join(file);
 
-          try {
-            platform.dest.forEach(function (destinationPath) {
-              var folder = destinationPath.substring(0, destinationPath.lastIndexOf('/'));
-              fs.ensureDirSync(folder);
-              fs.writeFileSync(destinationPath, contents);
-            });
-          } catch (e) {
-            // skip
-          }
+          platform.dest.forEach(function (destinationPath) {
+            var targetFilePath = path.join(destinationPath);
+            var folder = destinationPath.substring(0, destinationPath.lastIndexOf('/'));
+            var targetFolderPath = path.join(folder);
+            
+            fs.ensureDirSync(targetFolderPath);
+            fs.copyFileSync(sourceFilePath, targetFilePath);
+          });
+
         } catch (err) {
           console.log(err);
         }
-
         break;
       }
     }

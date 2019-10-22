@@ -10,10 +10,9 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 		<engine name="cordova" version=">=7.1.0" />
 	</engines>
 
-	<hook type="after_plugin_install" src="scripts/after_prepare.js" />
-
 	<platform name="android">
 		<hook type="after_plugin_install" src="scripts/android/after_plugin_install.js" />
+		<hook type="after_plugin_install" src="scripts/after_prepare.js" />
 		<hook type="before_plugin_uninstall" src="scripts/android/before_plugin_uninstall.js" />
 
 		<js-module name="FirebasePlugin" src="www/firebase.js">
@@ -66,6 +65,7 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<platform name="ios">
 		<hook type="after_plugin_install" src="scripts/ios/after_plugin_install.js" />
+		<hook type="after_plugin_install" src="scripts/after_prepare.js" />
 		<hook type="before_plugin_uninstall" src="scripts/ios/before_plugin_uninstall.js" />
 
 		<js-module name="FirebasePlugin" src="www/firebase.js">
