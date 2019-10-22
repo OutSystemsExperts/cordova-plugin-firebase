@@ -1,6 +1,6 @@
 var fs = require("fs");
 var path = require("path");
-var utilities = require("../lib/utilities");
+var utilities = require("../utilities");
 
 /**
  * This is used as the display text for the build phase block in XCode as well as the
@@ -38,7 +38,8 @@ module.exports = {
     xcodeProject.parseSync();
 
     // Build the body of the script to be executed during the build phase.
-    var script = '"' + '\\"${SRCROOT}\\"' + "/\\\"" + utilities.getAppName(context) + "\\\"/Plugins/" + utilities.getPluginId() + "/Fabric.framework/run" + '"';
+    // var script = '"' + '\\"${SRCROOT}\\"' + "/\\\"" + utilities.getAppName(context) + "\\\"/Plugins/" + utilities.getPluginId() + "/Fabric.framework/run" + '"';
+    var script = '"\\"${PODS_ROOT}/Fabric/run\\""';
 
     // Generate a unique ID for our new build phase.
     var id = xcodeProject.generateUuid();
