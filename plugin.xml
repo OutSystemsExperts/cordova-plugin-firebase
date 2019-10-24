@@ -10,6 +10,9 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 		<engine name="cordova" version=">=7.1.0" />
 	</engines>
 
+	<preference name="APP_DOMAIN" default="/" />
+  	<preference name="APP_PATH" default="/" />
+
 	<platform name="android">
 		<hook type="after_plugin_install" src="scripts/android/after_plugin_install.js" />
 		<hook type="before_plugin_uninstall" src="scripts/android/before_plugin_uninstall.js" />
@@ -28,6 +31,16 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 				<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 				<uses-permission android:name="android.permission.WAKE_LOCK" />
 		</config-file>
+
+		<config-file target="AndroidManifest.xml" parent="/manifest/application/activity">
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="http" android:host="$APP_DOMAIN" android:pathPrefix="$APP_PATH"/>
+				<data android:scheme="https" android:host="$APP_DOMAIN" android:pathPrefix="$APP_PATH"/>
+			</intent-filter>
+    	</config-file>
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
 			<service android:enabled="true" android:exported="false" android:name="com.google.android.gms.measurement.AppMeasurementService" />
 		</config-file>
@@ -44,8 +57,13 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 			</service>
 			<receiver android:name="org.apache.cordova.firebase.OnNotificationOpenReceiver"></receiver>
 		</config-file>
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+      		<meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="@string/default_notification_channel_id"/>
+    	</config-file>
 		
 		<resource-file src="src/android/cordova-plugin-firebase-strings.xml" target="res/values/cordova-plugin-firebase-strings.xml" />
+		<!-- <resource-file src="src/android/cordova-plugin-firebase-colors.xml" target="res/values/cordova-plugin-firebase-colors.xml" /> -->
+
 		<source-file src="src/android/FirebasePlugin.java" target-dir="src/org/apache/cordova/firebase" />
 		<source-file src="src/android/OnNotificationOpenReceiver.java" target-dir="src/org/apache/cordova/firebase" />
 		<source-file src="src/android/FirebasePluginInstanceIDService.java" target-dir="src/org/apache/cordova/firebase" />
@@ -55,12 +73,14 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 		<source-file src="src/android/colors.xml" target-dir="res/values" />
 
 		<framework src="src/android/build.gradle" custom="true" type="gradleReference" />
-		<framework src="com.google.android.gms:play-services-tagmanager:+" />
-		<framework src="com.google.firebase:firebase-core:+" />
-		<framework src="com.google.firebase:firebase-messaging:+" />
-		<framework src="com.google.firebase:firebase-config:+" />
-		<framework src="com.google.firebase:firebase-perf:+" />
-	</platform>
+    	<framework src="com.google.gms:google-services:4.2.0" />
+		<framework src="com.google.firebase:firebase-core:16.0.4" />
+	    <framework src="com.google.firebase:firebase-messaging:17.3.4" />
+    	<framework src="com.google.firebase:firebase-config:16.1.0" />
+		<framework src="com.google.firebase:firebase-perf:16.2.0" />
+    	<framework src="com.google.firebase:firebase-invites:16.0.4" />
+    	<framework src="com.google.firebase:firebase-iid:17.0.3" />
+  	</platform>
 
 	<platform name="ios">
 		<hook type="after_plugin_install" src="scripts/ios/after_plugin_install.js" />
