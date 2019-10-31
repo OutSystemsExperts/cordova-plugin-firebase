@@ -201,6 +201,9 @@ public class FirebasePlugin extends CordovaPlugin {
         } else if (action.equals("clearAllNotifications")) {
             this.clearAllNotifications(callbackContext);
             return true;
+        } else if (action.equals("forceCrashlytics")) {
+            this.forceCrashlytics();
+            return true;
         }
 
         return false;
@@ -966,6 +969,16 @@ public class FirebasePlugin extends CordovaPlugin {
                 } catch (Exception e) {
                     Crashlytics.log(e.getMessage());
                 }
+            }
+        });
+    }
+
+    private void forceCrashlytics() {
+        Log.d(TAG, "forceCrashlytics called");
+        final FirebasePlugin self = this;
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                Crashlytics.getInstance().crash();
             }
         });
     }
