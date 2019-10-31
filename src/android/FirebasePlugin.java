@@ -192,6 +192,9 @@ public class FirebasePlugin extends CordovaPlugin {
         } else if (action.equals("stopTrace")) {
             this.stopTrace(callbackContext, args.getString(0));
             return true;
+        } else if (action.equals("addTraceAttribute")) {
+            this.addTraceAttribute(callbackContext, args.getString(0), args.getString(1), args.getString(2));
+            return true;  
         } else if (action.equals("setAnalyticsCollectionEnabled")) {
             this.setAnalyticsCollectionEnabled(callbackContext, args.getBoolean(0));
             return true;
@@ -933,6 +936,32 @@ public class FirebasePlugin extends CordovaPlugin {
                 } catch (Exception e) {
                     Crashlytics.log(e.getMessage());
                     e.printStackTrace();
+                    callbackContext.error(e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void addTraceAttribute(final CallbackContext callbackContext, final String traceName, final String attribute, final String value) {
+        Log.d(TAG, "addTraceAttribute called. traceName: " + traceName + " attribute: " + attribute + " value: " + value);
+        final FirebasePlugin self = this;
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                try {
+                    Trace myTrace = null;
+                    if (self.traces.containsKey(traceName)) {
+                        myTrace = self.traces.get(traceName);
+                    }
+                    if (myTrace != null && myTrace instanceof Trace) {
+                        myTrace.putAttribute(attribute, value);
+                        callbackContext.success();
+                        Log.d(TAG, "addTraceAttribute success");
+                    } else {
+                        callbackContext.error("Trace not found");
+                        Log.d(TAG, "addTraceAttribute trace not found");
+                    }
+                } catch (Exception e) {
+                    Crashlytics.log(e.getMessage());
                     callbackContext.error(e.getMessage());
                 }
             }

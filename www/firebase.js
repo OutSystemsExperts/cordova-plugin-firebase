@@ -144,6 +144,10 @@ exports.stopTrace = function (name, success, error) {
   exec(success, error, "FirebasePlugin", "stopTrace", [name]);
 };
 
+exports.addTraceAttribute = function (traceName, attribute, value, success, error) {
+  exec(success, error, "FirebasePlugin", "addTraceAttribute", [traceName, attribute, value]);
+};
+
 exports.setAnalyticsCollectionEnabled = function (enabled, success, error) {
   exec(success, error, "FirebasePlugin", "setAnalyticsCollectionEnabled", [enabled]);
 };
