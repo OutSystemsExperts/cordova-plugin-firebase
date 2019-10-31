@@ -481,4 +481,9 @@ static FirebasePlugin *firebasePlugin;
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
+
+- (void)forceCrashlytics:(CDVInvokedUrlCommand *)command {
+    [[Crashlytics sharedInstance] crash];
+}
+
 @end
