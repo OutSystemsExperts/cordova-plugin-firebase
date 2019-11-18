@@ -9,6 +9,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.RemoteInput;
 import android.util.Log;
 import android.app.Notification;
 import android.text.TextUtils;
@@ -18,6 +19,12 @@ import android.graphics.Color;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -73,6 +80,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         String id = "";
         String sound = "";
         String lights = "";
+        JSONArray actions = null;
         Map<String, String> data = remoteMessage.getData();
 
         if (remoteMessage.getNotification() != null) {
@@ -80,6 +88,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             text = remoteMessage.getNotification().getBody();
             id = remoteMessage.getMessageId();
         } else if (data != null) {
+            try {
+                actions = new JSONArray(data.get("actions"));
+            } catch (JSONException e) {
+                Log.d("Error", e.toString());
+            }
             title = data.get("title");
             text = data.get("text");
             id = data.get("id");
@@ -107,11 +120,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         // TODO: Add option to developer to configure if show notification when app on foreground
         if (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title) || (data != null && !data.isEmpty())) {
             boolean showNotification = (FirebasePlugin.inBackground() || !FirebasePlugin.hasNotificationsCallback()) && (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title));
-            sendNotification(id, title, text, data, showNotification, sound, lights);
+            sendNotification(id, title, text, data, showNotification, sound, lights, actions);
         }
     }
 
-    private void sendNotification(String id, String title, String messageBody, Map<String, String> data, boolean showNotification, String sound, String lights) {
+    private void sendNotification(String id, String title, String messageBody, Map<String, String> data, boolean showNotification, String sound, String lights, JSONArray actions) {
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
             bundle.putString(key, data.get(key));
@@ -129,13 +142,14 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
             notificationBuilder
                     .setContentTitle(title)
-                    .setContentText(messageBody)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(messageBody))
                     .setAutoCancel(true)
                     .setSound(defaultSoundUri)
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_MAX);
+
+            addAction(notificationBuilder, actions);
 
             int resID = getResources().getIdentifier("notification_icon", "drawable", getPackageName());
             if (resID != 0) {
@@ -213,5 +227,86 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             bundle.putString("body", messageBody);
             FirebasePlugin.sendNotification(bundle, this.getApplicationContext());
         }
+    }
+
+    private void addAction(NotificationCompat.Builder notificationBuilder, JSONArray actions) {
+
+        ArrayList<NotificationCompat.Action> wActions = new ArrayList<NotificationCompat.Action>();
+        for (int i = 0; i < actions.length(); i++) {
+            try {
+                int min = 1;
+                int max = 2000000000;
+                SecureRandom random = new SecureRandom();
+                int uniquePendingIntentRequestCode = random.nextInt((max - min) + 1) + min;
+
+                JSONObject obj = actions.getJSONObject(i);
+                String icon = obj.getString("icon");
+                String title = obj.getString("title");
+                String callback = obj.getString("callback");
+                boolean foreground = obj.getBoolean("foreground");
+                boolean inline = obj.optBoolean("inline", false);
+                String replyLabel = obj.optString("replyLabel", "");
+                NotificationCompat.Action.Builder actionBuilder = null;
+
+                if(inline) {
+                    //Pending intent for a notification button help
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                            this,
+                            uniquePendingIntentRequestCode,
+                            new Intent(this, OnNotificationOpenReceiver.class) //updateIntent()
+                                    .putExtra(callback, uniquePendingIntentRequestCode), //updateIntent()
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+
+
+                    //We need this object for getting direct input from notification
+                    RemoteInput remoteInput = new RemoteInput.Builder("inlineReply")
+                            .setLabel(replyLabel)
+                            .build();
+
+                    NotificationCompat.Action action =
+                            new NotificationCompat.Action.Builder(android.R.drawable.ic_delete,
+                                    replyLabel, pendingIntent)
+                                    .addRemoteInput(remoteInput)
+                                    .build();
+
+                    notificationBuilder.addAction(action);
+                } else {
+                    PendingIntent pIntent = createAction(uniquePendingIntentRequestCode, callback);
+
+                    actionBuilder = new NotificationCompat.Action.Builder(
+                            getImageId(), title, pIntent);
+                    wActions.add(actionBuilder.build());
+
+                }
+                NotificationCompat.Action wAction = actionBuilder.build();
+                notificationBuilder.addAction(wAction);
+
+            } catch (Exception e) {
+
+            }
+        }
+
+        notificationBuilder.extend(new NotificationCompat.WearableExtender().addActions(wActions));
+        wActions.clear();
+    }
+
+
+    //TODO
+    private PendingIntent createAction(int uniquePendingIntentRequestCode, String callback) {
+        //Pending intent for a notification button named More
+
+        return PendingIntent.getBroadcast(
+                this,
+                uniquePendingIntentRequestCode,
+                new Intent(this, OnNotificationOpenReceiver.class)
+                        .putExtra(callback, uniquePendingIntentRequestCode), //updateIntent()
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+    }
+
+    private int getImageId() {
+        return this.getResources().getIdentifier("","drawable", this.getPackageName());
     }
 }

@@ -266,6 +266,8 @@ public class FirebasePlugin extends CordovaPlugin {
     }
 
     public static void sendNotification(Bundle bundle, Context context) {
+        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
+        notificationManagerCompat.cancelAll();
         if (!FirebasePlugin.hasNotificationsCallback()) {
             String packageName = context.getPackageName();
             if (FirebasePlugin.notificationStack == null) {
