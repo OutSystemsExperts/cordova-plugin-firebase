@@ -83,11 +83,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         JSONArray actions = null;
         Map<String, String> data = remoteMessage.getData();
 
-        if (remoteMessage.getNotification() != null) {
-            title = remoteMessage.getNotification().getTitle();
-            text = remoteMessage.getNotification().getBody();
-            id = remoteMessage.getMessageId();
-        } else if (data != null) {
+        if (data != null) {
             try {
                 actions = new JSONArray(data.get("actions"));
             } catch (JSONException e) {
@@ -102,6 +98,10 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             if (TextUtils.isEmpty(text)) {
                 text = data.get("body");
             }
+        } else if (remoteMessage.getNotification() != null) {
+            title = remoteMessage.getNotification().getTitle();
+            text = remoteMessage.getNotification().getBody();
+            id = remoteMessage.getMessageId();
         }
 
         if (TextUtils.isEmpty(id)) {
