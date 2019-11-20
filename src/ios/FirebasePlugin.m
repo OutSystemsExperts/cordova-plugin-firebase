@@ -479,4 +479,81 @@ static FirebasePlugin *firebasePlugin;
     [[Crashlytics sharedInstance] crash];
 }
 
+- (void)init:(CDVInvokedUrlCommand*)command;
+{
+    NSMutableDictionary* options = [command.arguments objectAtIndex:0];
+    NSMutableDictionary* iosOptions = [options objectForKey:@"ios"];
+    
+    [self.commandDelegate runInBackground:^ {
+        NSLog(@"Push Plugin register called");
+        
+        // setup action buttons
+        NSMutableSet<UNNotificationCategory *> *categories = [[NSMutableSet alloc] init];
+        id categoryOptions = [iosOptions objectForKey:@"categories"];
+        if (categoryOptions != nil && [categoryOptions isKindOfClass:[NSDictionary class]]) {
+            for (id key in categoryOptions) {
+                NSLog(@"categories: key %@", key);
+                id category = [categoryOptions objectForKey:key];
+
+                id yesButton = [category objectForKey:@"yes"];
+                UNNotificationAction *yesAction;
+                if (yesButton != nil && [yesButton  isKindOfClass:[NSDictionary class]]) {
+                    yesAction = [self createAction: yesButton];
+                }
+                id noButton = [category objectForKey:@"no"];
+                UNNotificationAction *noAction;
+                if (noButton != nil && [noButton  isKindOfClass:[NSDictionary class]]) {
+                    noAction = [self createAction: noButton];
+                }
+                id maybeButton = [category objectForKey:@"maybe"];
+                UNNotificationAction *maybeAction;
+                if (maybeButton != nil && [maybeButton  isKindOfClass:[NSDictionary class]]) {
+                    maybeAction = [self createAction: maybeButton];
+                }
+                // Identifier to include in your push payload and local notification
+                NSString *identifier = key;
+                NSMutableArray<UNNotificationAction *> *actions = [[NSMutableArray alloc] init];
+                if (yesButton != nil) {
+                    [actions addObject:yesAction];
+                }
+                if (noButton != nil) {
+                    [actions addObject:noAction];
+                }
+                if (maybeButton != nil) {
+                    [actions addObject:maybeAction];
+                }
+                UNNotificationCategory *notificationCategory = [UNNotificationCategory categoryWithIdentifier:identifier
+                                                                                        actions:actions
+                                                                                        intentIdentifiers:@[]
+                                                                                        options:UNNotificationCategoryOptionNone];
+                NSLog(@"Adding category %@", key);
+                [categories addObject:notificationCategory];
+            }
+        }
+        UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+        [center setNotificationCategories:categories];
+        [center getNotificationCategoriesWithCompletionHandler:^(NSSet<UNNotificationCategory *> * _Nonnull categories) {
+             NSLog(@"Categories %@", categories);
+        }];
+        UNUserNotificationCenter *center2 = [UNUserNotificationCenter currentNotificationCenter];
+    }];
+    
+}
+
+- (UNNotificationAction *)createAction:(NSDictionary *)dictionary {
+    NSString *identifier = [dictionary objectForKey:@"callback"];
+    NSString *title = [dictionary objectForKey:@"title"];
+    UNNotificationActionOptions options = UNNotificationActionOptionNone;
+
+    id mode = [dictionary objectForKey:@"foreground"];
+    if (mode != nil && (([mode isKindOfClass:[NSString class]] && [mode isEqualToString:@"true"]) || [mode boolValue])) {
+        options |= UNNotificationActionOptionForeground;
+    }
+    id destructive = [dictionary objectForKey:@"destructive"];
+    if (destructive != nil && (([destructive isKindOfClass:[NSString class]] && [destructive isEqualToString:@"true"]) || [destructive boolValue])) {
+        options |= UNNotificationActionOptionDestructive;
+    }
+
+    return [UNNotificationAction actionWithIdentifier:identifier title:title options:options];
+}
 @end

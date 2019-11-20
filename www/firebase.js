@@ -175,3 +175,7 @@ exports.clearAllNotifications = function (success, error) {
 exports.forceCrashlytics = function (success, error) {
   exec(success, error, "FirebasePlugin", "forceCrashlytics", []);
 };
+
+exports.init = function (options) {
+  exec(function() {},function() {}, "FirebasePlugin", "init", [options]);
+};
