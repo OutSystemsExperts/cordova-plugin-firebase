@@ -210,8 +210,27 @@
 // Receive data message on iOS 10 devices.
 - (void)applicationReceivedRemoteMessage:(FIRMessagingRemoteMessage *)remoteMessage {
     // Print full message
-    NSLog(@"%@", [remoteMessage appData]);
+    NSLog(@"applicationReceivedRemoteMessage %@", [remoteMessage appData]);
 }
 #endif
+
+- (void)checkUserHasRemoteNotificationsEnabledWithCompletionHandler:(nonnull void (^)(BOOL))completionHandler
+{
+    [[UNUserNotificationCenter currentNotificationCenter] getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings * _Nonnull settings) {
+
+        switch (settings.authorizationStatus)
+        {
+            case UNAuthorizationStatusDenied:
+            case UNAuthorizationStatusNotDetermined:
+                completionHandler(NO);
+                break;
+            case UNAuthorizationStatusAuthorized:
+                completionHandler(YES);
+                break;
+        }
+    }];
+}
+
+
 
 @end

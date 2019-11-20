@@ -66,22 +66,15 @@ static FirebasePlugin *firebasePlugin;
 }
 
 - (void)hasPermission:(CDVInvokedUrlCommand *)command {
-    BOOL enabled = NO;
-    UIApplication *application = [UIApplication sharedApplication];
-
-    if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
-        enabled = application.currentUserNotificationSettings.types != UIUserNotificationTypeNone;
-    } else {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        enabled = application.enabledRemoteNotificationTypes != UIRemoteNotificationTypeNone;
-#pragma GCC diagnostic pop
+    id<UIApplicationDelegate> appDelegate = [UIApplication sharedApplication].delegate;
+    if ([appDelegate respondsToSelector:@selector(checkUserHasRemoteNotificationsEnabledWithCompletionHandler:)]) {
+        [appDelegate performSelector:@selector(checkUserHasRemoteNotificationsEnabledWithCompletionHandler:) withObject:^(BOOL isEnabled) {
+            NSMutableDictionary* message = [NSMutableDictionary dictionaryWithCapacity:1];
+            [message setObject:[NSNumber numberWithBool:isEnabled] forKey:@"isEnabled"];
+            CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
+            [self.commandDelegate sendPluginResult:commandResult callbackId:command.callbackId];
+        }];
     }
-
-    NSMutableDictionary* message = [NSMutableDictionary dictionaryWithCapacity:1];
-    [message setObject:[NSNumber numberWithBool:enabled] forKey:@"isEnabled"];
-    CDVPluginResult *commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
-    [self.commandDelegate sendPluginResult:commandResult callbackId:command.callbackId];
 }
 
 - (void)grantPermission:(CDVInvokedUrlCommand *)command {
