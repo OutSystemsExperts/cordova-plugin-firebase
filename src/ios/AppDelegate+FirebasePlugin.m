@@ -72,6 +72,7 @@
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     self.delegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
         [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+    
 #endif
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tokenRefreshNotification:)
@@ -123,7 +124,15 @@
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    NSDictionary *mutableUserInfo = [userInfo mutableCopy];
+    
+    NSMutableDictionary *apsUserInfo = [userInfo objectForKey:@"aps"];
+    NSMutableDictionary *alertUserInfo = [apsUserInfo objectForKey:@"alert"];
+    
+    NSMutableDictionary *mutableUserInfo = [[NSMutableDictionary alloc] initWithCapacity:1];
+
+    [mutableUserInfo setValue:@YES forKey:@"tap"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"title"] forKey:@"title"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"body"] forKey:@"text"];
 
     [mutableUserInfo setValue:self.applicationInBackground forKey:@"tap"];
 
@@ -136,9 +145,17 @@
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
     fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 
-    NSDictionary *mutableUserInfo = [userInfo mutableCopy];
+    NSMutableDictionary *apsUserInfo = [userInfo objectForKey:@"aps"];
+    NSMutableDictionary *alertUserInfo = [apsUserInfo objectForKey:@"alert"];
+    
+    NSMutableDictionary *mutableUserInfo = [[NSMutableDictionary alloc] initWithCapacity:1];
 
+    [mutableUserInfo setValue:@YES forKey:@"tap"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"title"] forKey:@"title"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"body"] forKey:@"text"];
+    
     [mutableUserInfo setValue:self.applicationInBackground forKey:@"tap"];
+    
     // Print full message.
     NSLog(@"%@", mutableUserInfo);
     completionHandler(UIBackgroundFetchResultNewData);
@@ -173,8 +190,16 @@
     if (![notification.request.trigger isKindOfClass:UNPushNotificationTrigger.class])
         return;
 
-    NSDictionary *mutableUserInfo = [notification.request.content.userInfo mutableCopy];
+    NSMutableDictionary *userInfo = [notification.request.content.userInfo mutableCopy];
+    NSMutableDictionary *apsUserInfo = [userInfo objectForKey:@"aps"];
+    NSMutableDictionary *alertUserInfo = [apsUserInfo objectForKey:@"alert"];
+    
+    NSMutableDictionary *mutableUserInfo = [[NSMutableDictionary alloc] initWithCapacity:1];
 
+    [mutableUserInfo setValue:@YES forKey:@"tap"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"title"] forKey:@"title"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"body"] forKey:@"text"];
+    
     [mutableUserInfo setValue:self.applicationInBackground forKey:@"tap"];
 
     // Print full message.
@@ -195,9 +220,15 @@
     if (![response.notification.request.trigger isKindOfClass:UNPushNotificationTrigger.class])
         return;
 
-    NSMutableDictionary *mutableUserInfo = [response.notification.request.content.userInfo mutableCopy];
+    NSMutableDictionary *userInfo = [response.notification.request.content.userInfo mutableCopy];
+    NSMutableDictionary *apsUserInfo = [userInfo objectForKey:@"aps"];
+    NSMutableDictionary *alertUserInfo = [apsUserInfo objectForKey:@"alert"];
+    
+    NSMutableDictionary *mutableUserInfo = [[NSMutableDictionary alloc] initWithCapacity:1];
 
     [mutableUserInfo setValue:@YES forKey:@"tap"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"title"] forKey:@"title"];
+    [mutableUserInfo setValue:[alertUserInfo valueForKey:@"body"] forKey:@"text"];
 
     if (![response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier]) {
         [mutableUserInfo setObject:response.actionIdentifier forKey:@"actionCallback"];
@@ -234,7 +265,5 @@
         }
     }];
 }
-
-
 
 @end

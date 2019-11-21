@@ -32,6 +32,10 @@ import java.util.Random;
 public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "FirebasePlugin";
+    private static final String ACTION_CALLBACK = "actionCallback";
+    private static final String NOTIFICATION_TITLE = "title";
+    private static final String NOTIFICATION_BODY = "text";
+    private static final String NOTIFICATION_INLINE = "inline";
 
     /**
      * Get a string from resources without importing the .R package
@@ -83,11 +87,13 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         JSONArray actions = null;
         Map<String, String> data = remoteMessage.getData();
 
-        if (data != null) {
-            try {
-                actions = new JSONArray(data.get("actions"));
-            } catch (JSONException e) {
-                Log.d("Error", e.toString());
+        if (data != null && data.size() > 0) {
+            if (data.containsKey("actions")) {
+                try {
+                    actions = new JSONArray(data.get("actions"));
+                } catch (JSONException e) {
+                    Log.d("Error", e.toString());
+                }
             }
             title = data.get("title");
             text = data.get("text");
@@ -149,7 +155,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_MAX);
 
-            addAction(notificationBuilder, actions);
+            addAction(notificationBuilder, actions, title, messageBody);
 
             int resID = getResources().getIdentifier("notification_icon", "drawable", getPackageName());
             if (resID != 0) {
@@ -229,7 +235,8 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void addAction(NotificationCompat.Builder notificationBuilder, JSONArray actions) {
+    private void addAction(NotificationCompat.Builder notificationBuilder, JSONArray actions, String notificationTitle,
+                           String notificationMessage) {
 
         ArrayList<NotificationCompat.Action> wActions = new ArrayList<NotificationCompat.Action>();
         for (int i = 0; i < actions.length(); i++) {
@@ -253,8 +260,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     PendingIntent pendingIntent = PendingIntent.getBroadcast(
                             this,
                             uniquePendingIntentRequestCode,
-                            new Intent(this, OnNotificationOpenReceiver.class) //updateIntent()
-                                    .putExtra(callback, uniquePendingIntentRequestCode), //updateIntent()
+                            updateIntent(callback, notificationTitle, notificationMessage, inline),
                             PendingIntent.FLAG_UPDATE_CURRENT
                     );
 
@@ -272,7 +278,8 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
                     notificationBuilder.addAction(action);
                 } else {
-                    PendingIntent pIntent = createAction(uniquePendingIntentRequestCode, callback);
+                    PendingIntent pIntent = createAction(uniquePendingIntentRequestCode, callback,
+                            notificationTitle, notificationMessage, inline);
 
                     actionBuilder = new NotificationCompat.Action.Builder(
                             getImageId(), title, pIntent);
@@ -293,17 +300,28 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
 
     //TODO
-    private PendingIntent createAction(int uniquePendingIntentRequestCode, String callback) {
+    private PendingIntent createAction(int uniquePendingIntentRequestCode, String callback,
+                                       String notificationTitle, String notificationMessage, boolean inline) {
         //Pending intent for a notification button named More
 
         return PendingIntent.getBroadcast(
                 this,
                 uniquePendingIntentRequestCode,
-                new Intent(this, OnNotificationOpenReceiver.class)
-                        .putExtra(callback, uniquePendingIntentRequestCode), //updateIntent()
+                //new Intent(this, OnNotificationOpenReceiver.class)
+                  //      .putExtra(ACTION_CALLBACK, callback),
+                updateIntent(callback, notificationTitle, notificationMessage, inline),
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
 
+    }
+
+    private Intent updateIntent(String callback, String notificationTitle,
+                                String notificationMessage, boolean inline) {
+        return new Intent(this, OnNotificationOpenReceiver.class)
+                .putExtra(ACTION_CALLBACK, callback)
+                .putExtra(NOTIFICATION_INLINE, inline)
+                .putExtra(NOTIFICATION_TITLE, notificationTitle)
+                .putExtra(NOTIFICATION_BODY, notificationMessage);
     }
 
     private int getImageId() {
