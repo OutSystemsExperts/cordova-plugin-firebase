@@ -535,7 +535,6 @@ static FirebasePlugin *firebasePlugin;
         [center getNotificationCategoriesWithCompletionHandler:^(NSSet<UNNotificationCategory *> * _Nonnull categories) {
              NSLog(@"Categories %@", categories);
         }];
-        UNUserNotificationCenter *center2 = [UNUserNotificationCenter currentNotificationCenter];
     }];
     
 }

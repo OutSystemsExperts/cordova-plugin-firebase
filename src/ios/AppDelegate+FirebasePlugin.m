@@ -195,9 +195,13 @@
     if (![response.notification.request.trigger isKindOfClass:UNPushNotificationTrigger.class])
         return;
 
-    NSDictionary *mutableUserInfo = [response.notification.request.content.userInfo mutableCopy];
+    NSMutableDictionary *mutableUserInfo = [response.notification.request.content.userInfo mutableCopy];
 
     [mutableUserInfo setValue:@YES forKey:@"tap"];
+
+    if (![response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier]) {
+        [mutableUserInfo setObject:response.actionIdentifier forKey:@"actionCallback"];
+    }
 
     // Print full message.
     NSLog(@"Response %@", mutableUserInfo);
